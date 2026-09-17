@@ -27,6 +27,7 @@
             <td>{{ item.manager || '-' }}</td>
             <td>
               <button class="btn secondary small" @click="openEdit(item)">编辑</button>
+              <button class="btn secondary small" @click="goSafety(item)">安全巡检</button>
               <button class="btn danger small" @click="remove(item)">删除</button>
             </td>
           </tr>
@@ -79,7 +80,10 @@
 
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '../api/http'
+
+const router = useRouter()
 
 const list = ref([])
 const error = ref('')
@@ -114,6 +118,10 @@ function openEdit(item) {
   Object.assign(form, item)
   formError.value = ''
   showModal.value = true
+}
+
+function goSafety(item) {
+  router.push({ name: 'safety', query: { siteId: item.id } })
 }
 
 async function save() {

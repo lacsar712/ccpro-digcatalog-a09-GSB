@@ -107,5 +107,70 @@ func Run(db *gorm.DB) {
 		db.Create(&finds[i])
 	}
 
+	seedSafetyRounds(db, sites)
+
 	log.Println("seed data inserted")
+}
+
+// seedSafetyRounds 幂等补齐安全巡检演示数据：至少 1 个合格轮与 1 个风险轮。
+// 独立于 Run 的“已有用户即跳过”逻辑，保证老数据卷升级后也能看到巡检数据。
+func seedSafetyRounds(db *gorm.DB, sites []models.Site) {
+	var roundCount int64
+	db.Model(&models.SafetyRound{}).Count(&roundCount)
+	if roundCount > 0 {
+		return
+	}
+	if len(sites) < 3 {
+		log.Printf("seed safety rounds skipped: not enough sites")
+		return
+	}
+
+	// 合格轮（无 fail 项）
+	okRound := models.SafetyRound{
+		SiteID: sites[0].ID, RoundDate: date("2024-04-10"), Inspector: "周慎行", Weather: "晴",
+		Conclusion: "ok",
+		Summary:    "围挡完好，临时用电规范，发掘现场防护到位，未见明显隐患。",
+		Items: []models.SafetyItem{
+			{ItemCode: "S-01", Result: "pass", Comment: "围挡连续完整，警示标识齐全"},
+			{ItemCode: "S-02", Result: "pass", Comment: "配电箱上锁，漏电保护有效"},
+			{ItemCode: "S-03", Result: "pass", Comment: "探方边坡稳定，支护到位"},
+			{ItemCode: "S-04", Result: "na", Comment: "本轮未进行吊装作业"},
+			{ItemCode: "S-05", Result: "pass", Comment: "消防器材在有效期内"},
+		},
+	}
+	if err := db.Create(&okRound).Error; err != nil {
+		log.Printf("seed ok safety round error: %v", err)
+	}
+
+	// 风险轮（含 fail 项）
+	riskRound := models.SafetyRound{
+		SiteID: sites[2].ID, RoundDate: date("2024-06-21"), Inspector: "周慎行", Weather: "小雨转多云",
+		Conclusion: "risk",
+		Summary:    "探方临边防护缺失且现场积水，存在坠落与触电风险，已要求停工整改并复查。",
+		Items: []models.SafetyItem{
+			{ItemCode: "S-01", Result: "pass", Comment: "围挡完好"},
+			{ItemCode: "S-02", Result: "fail", Comment: "T3 探方临边未设防护栏，存在坠落风险"},
+			{ItemCode: "S-03", Result: "fail", Comment: "现场积水，临时电缆泡水，存在漏电风险"},
+			{ItemCode: "S-04", Result: "pass", Comment: "安全帽佩戴规范"},
+			{ItemCode: "S-05", Result: "na", Comment: "灭火器本周已盘点"},
+		},
+	}
+	if err := db.Create(&riskRound).Error; err != nil {
+		log.Printf("seed risk safety round error: %v", err)
+	}
+}
+
+// EnsureSafetyRounds 供 main 在迁移后调用：若巡检表为空，则按现有工地补齐演示轮次。
+func EnsureSafetyRounds(db *gorm.DB) {
+	var roundCount int64
+	db.Model(&models.SafetyRound{}).Count(&roundCount)
+	if roundCount > 0 {
+		return
+	}
+	var sites []models.Site
+	if err := db.Order("id asc").Limit(3).Find(&sites).Error; err != nil {
+		log.Printf("ensure safety rounds load sites error: %v", err)
+		return
+	}
+	seedSafetyRounds(db, sites)
 }

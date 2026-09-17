@@ -45,11 +45,14 @@ func main() {
 		&models.Unit{},
 		&models.Material{},
 		&models.Find{},
+		&models.SafetyRound{},
+		&models.SafetyItem{},
 	); err != nil {
 		log.Fatalf("auto migrate failed: %v", err)
 	}
 
 	seed.Run(db)
+	seed.EnsureSafetyRounds(db)
 
 	h := handlers.New(db, cfg.JWTSecret)
 	r := gin.Default()
@@ -86,6 +89,12 @@ func main() {
 			auth.POST("/finds", h.CreateFind)
 			auth.PUT("/finds/:id", h.UpdateFind)
 			auth.DELETE("/finds/:id", h.DeleteFind)
+
+			auth.GET("/safety-rounds", h.ListSafetyRounds)
+			auth.GET("/safety-rounds/:id", h.GetSafetyRound)
+			auth.POST("/safety-rounds", h.CreateSafetyRound)
+			auth.PUT("/safety-rounds/:id", h.UpdateSafetyRound)
+			auth.DELETE("/safety-rounds/:id", h.DeleteSafetyRound)
 		}
 	}
 

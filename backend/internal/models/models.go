@@ -26,7 +26,37 @@ type Site struct {
 	CreatedAt time.Time      `json:"createdAt"`
 	UpdatedAt time.Time      `json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
-	Units     []Unit         `json:"units,omitempty" gorm:"foreignKey:SiteID"`
+	Units        []Unit        `json:"units,omitempty" gorm:"foreignKey:SiteID"`
+	SafetyRounds []SafetyRound `json:"safetyRounds,omitempty" gorm:"foreignKey:SiteID"`
+}
+
+// SafetyRound 工地安全巡检轮次。Conclusion: ok（合格）| risk（有风险）
+type SafetyRound struct {
+	ID         uint           `json:"id" gorm:"primaryKey"`
+	SiteID     uint           `json:"siteId" gorm:"not null;index"`
+	RoundDate  *time.Time     `json:"roundDate" gorm:"type:date"`
+	Inspector  string         `json:"inspector" gorm:"size:64;not null"`
+	Weather    string         `json:"weather" gorm:"size:64"`
+	Conclusion string         `json:"conclusion" gorm:"size:16;not null"` // ok | risk
+	Summary    string         `json:"summary" gorm:"type:text"`
+	CreatedAt  time.Time      `json:"createdAt"`
+	UpdatedAt  time.Time      `json:"updatedAt"`
+	DeletedAt  gorm.DeletedAt `json:"-" gorm:"index"`
+	Site       *Site          `json:"site,omitempty" gorm:"foreignKey:SiteID"`
+	Items      []SafetyItem   `json:"items,omitempty" gorm:"foreignKey:RoundID"`
+}
+
+// SafetyItem 巡检条目。Result: pass | fail | na；同一轮次内 itemCode 唯一
+type SafetyItem struct {
+	ID        uint           `json:"id" gorm:"primaryKey"`
+	RoundID   uint           `json:"roundId" gorm:"not null;uniqueIndex:uk_round_item_code"`
+	ItemCode  string         `json:"itemCode" gorm:"size:64;not null;uniqueIndex:uk_round_item_code"`
+	Result    string         `json:"result" gorm:"size:16;not null"` // pass | fail | na
+	Comment   string         `json:"comment" gorm:"type:text"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	Round     *SafetyRound   `json:"round,omitempty" gorm:"foreignKey:RoundID"`
 }
 
 type Unit struct {
