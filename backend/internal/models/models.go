@@ -69,3 +69,32 @@ type Find struct {
 	Unit         *Unit          `json:"unit,omitempty" gorm:"foreignKey:UnitID"`
 	Material     *Material      `json:"material,omitempty" gorm:"foreignKey:MaterialID"`
 }
+
+// SafetyRound 工地安全巡检轮次，挂在 Site 下
+type SafetyRound struct {
+	ID         uint           `json:"id" gorm:"primaryKey"`
+	SiteID     uint           `json:"siteId" gorm:"not null;index"`
+	RoundDate  *time.Time     `json:"roundDate" gorm:"type:date"`
+	Inspector  string         `json:"inspector" gorm:"size:64;not null"`
+	Weather    string         `json:"weather" gorm:"size:64"`
+	Conclusion string         `json:"conclusion" gorm:"size:16;not null"` // ok | risk
+	Summary    string         `json:"summary" gorm:"type:text"`
+	CreatedAt  time.Time      `json:"createdAt"`
+	UpdatedAt  time.Time      `json:"updatedAt"`
+	DeletedAt  gorm.DeletedAt `json:"-" gorm:"index"`
+	Site       *Site          `json:"site,omitempty" gorm:"foreignKey:SiteID"`
+	Items      []SafetyItem   `json:"items,omitempty" gorm:"foreignKey:RoundID"`
+}
+
+// SafetyItem 巡检条目，同一轮次内 itemCode 唯一
+type SafetyItem struct {
+	ID        uint           `json:"id" gorm:"primaryKey"`
+	RoundID   uint           `json:"roundId" gorm:"not null;uniqueIndex:idx_round_item_code"`
+	ItemCode  string         `json:"itemCode" gorm:"size:64;not null;uniqueIndex:idx_round_item_code"`
+	Result    string         `json:"result" gorm:"size:16;not null"` // pass | fail | na
+	Comment   string         `json:"comment" gorm:"type:text"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	Round     *SafetyRound   `json:"round,omitempty" gorm:"foreignKey:RoundID"`
+}

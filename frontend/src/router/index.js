@@ -7,6 +7,7 @@ import Sites from '../views/Sites.vue'
 import Units from '../views/Units.vue'
 import Finds from '../views/Finds.vue'
 import Materials from '../views/Materials.vue'
+import SafetyRounds from '../views/SafetyRounds.vue'
 
 const routes = [
   { path: '/login', name: 'login', component: Login, meta: { public: true } },
@@ -18,7 +19,8 @@ const routes = [
       { path: 'sites', name: 'sites', component: Sites },
       { path: 'units', name: 'units', component: Units },
       { path: 'finds', name: 'finds', component: Finds },
-      { path: 'materials', name: 'materials', component: Materials }
+      { path: 'materials', name: 'materials', component: Materials },
+      { path: 'safety-rounds', name: 'safety-rounds', component: SafetyRounds }
     ]
   }
 ]

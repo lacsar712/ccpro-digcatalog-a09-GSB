@@ -107,5 +107,40 @@ func Run(db *gorm.DB) {
 		db.Create(&finds[i])
 	}
 
+	// 工地安全巡检：一轮 ok（无 fail），一轮 risk（含 fail）
+	rounds := []models.SafetyRound{
+		{
+			SiteID: sites[0].ID, RoundDate: date("2024-04-10"), Inspector: "赵安全",
+			Weather: "晴，西北风3级", Conclusion: "ok",
+			Summary: "围挡完好，边坡稳定，临时用电规范，未发现安全隐患。",
+		},
+		{
+			SiteID: sites[1].ID, RoundDate: date("2024-05-20"), Inspector: "赵安全",
+			Weather: "阵雨转多云", Conclusion: "risk",
+			Summary: "连续降雨后探方北壁出现裂缝，排水沟通堵，已设警戒线并限期整改。",
+		},
+	}
+	for i := range rounds {
+		db.Create(&rounds[i])
+	}
+
+	items := []models.SafetyItem{
+		// ok 轮
+		{RoundID: rounds[0].ID, ItemCode: "S01", Result: "pass", Comment: "施工现场围挡连续、警示标识齐全"},
+		{RoundID: rounds[0].ID, ItemCode: "S02", Result: "pass", Comment: "探方边坡放坡符合方案"},
+		{RoundID: rounds[0].ID, ItemCode: "S03", Result: "pass", Comment: "配电箱漏电保护有效"},
+		{RoundID: rounds[0].ID, ItemCode: "S04", Result: "na", Comment: "本区段暂未使用大型机械"},
+		{RoundID: rounds[0].ID, ItemCode: "S05", Result: "pass", Comment: "安全帽、反光背心佩戴到位"},
+		// risk 轮
+		{RoundID: rounds[1].ID, ItemCode: "S01", Result: "pass", Comment: "围挡完好"},
+		{RoundID: rounds[1].ID, ItemCode: "S02", Result: "fail", Comment: "T1 北壁雨后出现长约2m裂缝，有垮塌风险"},
+		{RoundID: rounds[1].ID, ItemCode: "S03", Result: "fail", Comment: "探方东南角排水沟通堵，积水浸泡壁脚"},
+		{RoundID: rounds[1].ID, ItemCode: "S04", Result: "pass", Comment: "临时用电检查正常"},
+		{RoundID: rounds[1].ID, ItemCode: "S05", Result: "na", Comment: "当日未安排下坑作业"},
+	}
+	for i := range items {
+		db.Create(&items[i])
+	}
+
 	log.Println("seed data inserted")
 }

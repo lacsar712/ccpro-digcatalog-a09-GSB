@@ -26,6 +26,7 @@
             <td>{{ item.latitude }}, {{ item.longitude }}</td>
             <td>{{ item.manager || '-' }}</td>
             <td>
+              <router-link class="btn secondary small" :to="{ name: 'safety-rounds', query: { siteId: item.id } }">安全巡检</router-link>
               <button class="btn secondary small" @click="openEdit(item)">编辑</button>
               <button class="btn danger small" @click="remove(item)">删除</button>
             </td>

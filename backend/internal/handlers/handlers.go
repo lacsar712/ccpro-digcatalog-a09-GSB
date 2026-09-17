@@ -137,6 +137,11 @@ func (h *Handler) DeleteSite(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "该工地下仍有探方，无法删除"})
 		return
 	}
+	h.DB.Model(&models.SafetyRound{}).Where("site_id = ?", id).Count(&count)
+	if count > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "该工地下仍有安全巡检记录，无法删除"})
+		return
+	}
 	if err := h.DB.Delete(&models.Site{}, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

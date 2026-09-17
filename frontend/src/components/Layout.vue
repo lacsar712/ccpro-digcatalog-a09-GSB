@@ -36,7 +36,8 @@ const menus = [
   { to: '/sites', label: '发掘工地' },
   { to: '/units', label: '探方单位' },
   { to: '/finds', label: '出土文物' },
-  { to: '/materials', label: '材质分类' }
+  { to: '/materials', label: '材质分类' },
+  { to: '/safety-rounds', label: '安全巡检' }
 ]
 
 function onLogout() {
